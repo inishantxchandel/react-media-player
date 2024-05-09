@@ -1,5 +1,5 @@
 import React from "react";
-import { CirclePause, CirclePlay, SkipForward, Maximize2 } from "lucide-react";
+import { CirclePause, CirclePlay, SkipForward, Maximize2, Minimize2, Minimize } from "lucide-react";
 
 interface ControlsProps {
   isPlaying: boolean;
@@ -9,6 +9,7 @@ interface ControlsProps {
   nextMedia: () => void;
   handleRateChange: (rate: number) => void;
   toggleFullScreen: () => void;
+  toggleMiniPlayer: () => void;
   currentTime: number;
   duration: number;
   volume: number;
@@ -29,6 +30,7 @@ const Controls: React.FC<ControlsProps> = ({
   volume,
   handleVolumeChange,
   playbackRate,
+  toggleMiniPlayer
 }) => {
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
@@ -96,10 +98,17 @@ const Controls: React.FC<ControlsProps> = ({
       </select>
       <button
         className="bg-blue-500 text-white py-2 px-4 rounded-md"
+        onClick={toggleMiniPlayer}
+      >
+        <Minimize />
+      </button>
+      <button
+        className="bg-blue-500 text-white py-2 px-4 rounded-md"
         onClick={toggleFullScreen}
       >
         <Maximize2 />
       </button>
+
       <div className="text-white">
         {formatTime(currentTime)} / {formatTime(duration)}
       </div>

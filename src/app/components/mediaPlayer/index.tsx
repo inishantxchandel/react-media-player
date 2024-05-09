@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect, useRef } from "react";
 import Controls from "../controls";
-import { Loader } from "lucide-react";
+import { Expand, Loader } from "lucide-react";
 
 interface MediaPlayerProps {
   mediaList: string[];
@@ -22,6 +22,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isMiniPlayer, setIsMiniPlayer] = useState<boolean>(false);
   const mediaRef = useRef<HTMLMediaElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
 
@@ -48,15 +49,12 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   useEffect(() => {
     if (mediaRef.current) {
       const media = mediaRef.current;
-      // If autoplay is enabled and the media is not playing, play it
       if (media.autoplay && !media.paused) {
         setIsPlaying(true);
       }
-      // If the media is not playing and autoplay is enabled, play it
       if (!isPlaying && media.autoplay) {
         media.play();
       }
-      // Event listener to pause the media when it ends
       const handleEnded = () => {
         if (!media.loop && currentMediaIndex < mediaList.length - 1) {
           nextMedia();
@@ -108,7 +106,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       setShowControls(!showControls);
     }
   };
-  
+
+  const toggleMiniPlayer = () => {
+    setIsMiniPlayer(!isMiniPlayer);
+  }
 
   const toggleFullScreen = () => {
     if (!isFullScreen) {
@@ -120,6 +121,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     }
     setIsFullScreen(!isFullScreen);
   };
+  
 
   const handleLoading = () => {
     setIsLoading(true);
@@ -179,7 +181,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
         break;
       case "w":
       case "W":
-        toggleFullScreen();
+        toggleMiniPlayer();
         break;
       case "n":
       case "N":
@@ -205,14 +207,13 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       clearTimeout(hideControlsTimeout);
     };
   }, [showControls]);
-  
- 
-
 
   return (
     <div
-      className={`player border w-[80%] mx-auto border-gray-300 rounded-md overflow-hidden relative ${
-        isFullScreen ? "fixed top-0 left-0 right-0 bottom-0" : ""
+      className={`player border ${
+        isMiniPlayer ? 'w-[300px] h-[169px] fixed bottom-0 right-0' : 'w-[80%] mx-auto'
+      } border-gray-300 rounded-md overflow-hidden relative ${
+        isFullScreen ? "top-0 left-0 right-0 bottom-0" : ""
       }`}
       onMouseEnter={toggleControls}
     >
@@ -226,6 +227,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       {mediaList.length > 0 && (
         <>
           {mediaList[currentMediaIndex].endsWith(".mp4") ? (
+            <div>
             <video
               ref={mediaRef as React.MutableRefObject<HTMLVideoElement>}
               src={mediaList[currentMediaIndex]}
@@ -234,6 +236,13 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
             ></video>
+            {isMiniPlayer &&
+
+             <Expand
+              className="absolute top-0 right-0 m-4 cursor-pointer"
+              onClick={toggleMiniPlayer}
+            />}
+            </div>
           ) : (
             <audio
               ref={mediaRef as React.MutableRefObject<HTMLAudioElement>}
@@ -270,6 +279,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
           volume={volume}
           handleVolumeChange={handleVolumeChange}
           playbackRate={playbackRate}
+          toggleMiniPlayer={toggleMiniPlayer}
         />
       )}
     </div>

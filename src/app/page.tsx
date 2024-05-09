@@ -9,7 +9,7 @@ export default function Home() {
   ];
   return (
    <>
-    <div className="container mx-auto">
+    <div className="">
       <h1 className="text-xl font-bold">Media Player</h1>
       <MediaPlayer mediaList={mediaList} />
     </div>
