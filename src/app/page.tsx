@@ -4,7 +4,7 @@ import MediaPlayer from "./components/mediaPlayer";
 export default function Home() {
   const mediaList = [
     'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // Sample video
-    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4' // Another sample video
+    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', // Another sample video,
   ];
   return (
    <>

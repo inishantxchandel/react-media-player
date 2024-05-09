@@ -176,6 +176,37 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   };
 
   useEffect(() => {
+    if (mediaRef.current) {
+      const media = mediaRef.current;
+  
+      // If autoplay is enabled and the media is not playing, play it
+      if (media.autoplay && !media.paused) {
+        setIsPlaying(true);
+      }
+  
+      // If the media is not playing and autoplay is enabled, play it
+      if (!isPlaying && media.autoplay) {
+        media.play();
+      }
+  
+      // Event listener to pause the media when it ends
+      const handleEnded = () => {
+        if (!media.loop && currentMediaIndex < mediaList.length - 1) {
+          nextMedia();
+        }
+      };
+  
+      media.addEventListener("ended", handleEnded);
+  
+      return () => {
+        media.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [currentMediaIndex]);
+  
+  
+
+  useEffect(() => {
     const hideControlsTimeout = setTimeout(() => {
       setShowControls(false);
     }, 3000);
@@ -216,6 +247,9 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
         ref={mediaRef}
         src={mediaList[currentMediaIndex]}
         className="w-full"
+        autoPlay
+        onPlay={() => setIsPlaying(true)} 
+        onPause={() => setIsPlaying(false)}
       >
         Your browser does not support the video tag.
       </video>
