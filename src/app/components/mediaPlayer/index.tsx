@@ -1,12 +1,7 @@
-"use client";
-import {
-  CirclePause,
-  CirclePlay,
-  Loader,
-  Maximize2,
-  SkipForward,
-} from "lucide-react";
+"use client"
 import React, { useState, useEffect, useRef } from "react";
+import Controls from "../controls";
+import { Loader } from "lucide-react";
 
 interface MediaPlayerProps {
   mediaList: string[];
@@ -27,7 +22,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const mediaRef = useRef<HTMLVideoElement>(null);
+  const mediaRef = useRef<HTMLMediaElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,6 +44,30 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       }
     };
   }, [volume, playbackRate, currentMediaIndex]);
+
+  useEffect(() => {
+    if (mediaRef.current) {
+      const media = mediaRef.current;
+      // If autoplay is enabled and the media is not playing, play it
+      if (media.autoplay && !media.paused) {
+        setIsPlaying(true);
+      }
+      // If the media is not playing and autoplay is enabled, play it
+      if (!isPlaying && media.autoplay) {
+        media.play();
+      }
+      // Event listener to pause the media when it ends
+      const handleEnded = () => {
+        if (!media.loop && currentMediaIndex < mediaList.length - 1) {
+          nextMedia();
+        }
+      };
+      media.addEventListener("ended", handleEnded);
+      return () => {
+        media.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [currentMediaIndex]);
 
   const updateTime = () => {
     if (mediaRef.current) {
@@ -83,21 +102,21 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   };
 
   const toggleControls = () => {
-    setShowControls(!showControls);
+    if (mediaList[currentMediaIndex].endsWith(".mp3")) {
+      setShowControls(true);
+    } else {
+      setShowControls(!showControls);
+    }
   };
+  
 
   const toggleFullScreen = () => {
-    document.querySelector(".player");
     if (!isFullScreen) {
       if (mediaRef.current) {
         mediaRef.current.requestFullscreen();
       }
     } else {
-      if (document.fullscreenElement === null) {
-        mediaRef.current?.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
+      document.exitFullscreen();
     }
     setIsFullScreen(!isFullScreen);
   };
@@ -132,7 +151,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     }
   };
 
-  const handleKeyPress = (e: KeyboardEvent) => {
+  const handleKeyPress = (e: any) => {
     setShowControls(true);
     switch (e.key) {
       case " ":
@@ -174,67 +193,28 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
         break;
     }
   };
-
   useEffect(() => {
-    if (mediaRef.current) {
-      const media = mediaRef.current;
-  
-      // If autoplay is enabled and the media is not playing, play it
-      if (media.autoplay && !media.paused) {
-        setIsPlaying(true);
-      }
-  
-      // If the media is not playing and autoplay is enabled, play it
-      if (!isPlaying && media.autoplay) {
-        media.play();
-      }
-  
-      // Event listener to pause the media when it ends
-      const handleEnded = () => {
-        if (!media.loop && currentMediaIndex < mediaList.length - 1) {
-          nextMedia();
-        }
-      };
-  
-      media.addEventListener("ended", handleEnded);
-  
-      return () => {
-        media.removeEventListener("ended", handleEnded);
-      };
-    }
-  }, [currentMediaIndex]);
-  
-  
-
-  useEffect(() => {
-    const hideControlsTimeout = setTimeout(() => {
-      setShowControls(false);
-    }, 3000);
-
     window.addEventListener("keydown", handleKeyPress);
-
+    const hideControlsTimeout = setTimeout(() => {
+      if (!mediaList[currentMediaIndex].endsWith(".mp3")) {
+        setShowControls(false);
+      }
+    }, 3000);
     return () => {
-      clearTimeout(hideControlsTimeout);
       window.removeEventListener("keydown", handleKeyPress);
+      clearTimeout(hideControlsTimeout);
     };
   }, [showControls]);
+  
+ 
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
-      2,
-      "0"
-    )}`;
-  };
 
   return (
     <div
-      className={`player border border-gray-300 rounded-md overflow-hidden relative ${
+      className={`player border w-[80%] mx-auto border-gray-300 rounded-md overflow-hidden relative ${
         isFullScreen ? "fixed top-0 left-0 right-0 bottom-0" : ""
       }`}
       onMouseEnter={toggleControls}
-      onMouseLeave={toggleControls}
     >
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -243,92 +223,55 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
           </div>
         </div>
       )}
-      <video
-        ref={mediaRef}
-        src={mediaList[currentMediaIndex]}
-        className="w-full"
-        autoPlay
-        onPlay={() => setIsPlaying(true)} 
-        onPause={() => setIsPlaying(false)}
-      >
-        Your browser does not support the video tag.
-      </video>
-      {showControls && (
-        <div className="controls p-4 bg-gray-200 flex items-center justify-between absolute bottom-0 left-0 right-0">
-          <button
-            className="bg-blue-500 text-white py-2 px-4 rounded-md"
-            onClick={togglePlay}
+      {mediaList.length > 0 && (
+        <>
+          {mediaList[currentMediaIndex].endsWith(".mp4") ? (
+            <video
+              ref={mediaRef as React.MutableRefObject<HTMLVideoElement>}
+              src={mediaList[currentMediaIndex]}
+              className="w-full"
+              autoPlay
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+            ></video>
+          ) : (
+            <audio
+              ref={mediaRef as React.MutableRefObject<HTMLAudioElement>}
+              src={mediaList[currentMediaIndex]}
+              className="w-full"
+              autoPlay
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+            ></audio>
+          )}
+          <div
+            ref={progressRef}
+            className="progress-bar bg-gray-300 h-2 cursor-pointer absolute bottom-0 left-0 right-0"
+            onClick={handleProgressClick}
           >
-            {isPlaying ? <CirclePause /> : <CirclePlay />}
-          </button>
-          <button
-            className="bg-blue-500 text-white py-2 px-4 rounded-md"
-            onClick={() => skipTime(-10)}
-          >
-            -10s
-          </button>
-          <button
-            className="bg-blue-500 text-white py-2 px-4 rounded-md"
-            onClick={() => skipTime(10)}
-          >
-            +10s
-          </button>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={volume}
-            onChange={(e) => handleVolumeChange(Number(e.target.value))}
-            className="mx-2"
-          />
-          <button
-            className="bg-blue-500 text-white py-2 px-4 rounded-md"
-            onClick={previousMedia}
-          >
-            <SkipForward className="rotate-180" />
-          </button>
-          <button
-            className="bg-blue-500 text-white py-2 px-4 rounded-md"
-            onClick={nextMedia}
-          >
-            <SkipForward />
-          </button>
-
-          <select
-            value={playbackRate}
-            onChange={(e) => handleRateChange(parseFloat(e.target.value))}
-            className="mx-2 bg-white border border-gray-300 rounded-md px-2 py-1"
-          >
-            {[
-              0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5,
-              3.75, 4,
-            ].map((rate) => (
-              <option key={rate} value={rate}>
-                {rate}x
-              </option>
-            ))}
-          </select>
-          <button
-            className="bg-blue-500 text-white py-2 px-4 rounded-md"
-            onClick={toggleFullScreen}
-          >
-            <Maximize2 />
-          </button>
-          <div className="text-white">
-            {formatTime(currentTime)} / {formatTime(duration)}
+            <div
+              className="progress bg-blue-500 h-full"
+              style={{ width: `${(currentTime / duration) * 100}%` }}
+            ></div>
           </div>
-        </div>
+        </>
       )}
-      <div
-        ref={progressRef}
-        className="progress-bar bg-gray-300 h-2 cursor-pointer absolute bottom-0 left-0 right-0"
-        onClick={handleProgressClick}
-      >
-        <div
-          className="progress bg-blue-500 h-full"
-          style={{ width: `${(currentTime / duration) * 100}%` }}
-        ></div>
-      </div>
+      {showControls && (
+        <Controls
+          isPlaying={isPlaying}
+          togglePlay={togglePlay}
+          skipTime={skipTime}
+          previousMedia={previousMedia}
+          nextMedia={nextMedia}
+          handleRateChange={handleRateChange}
+          toggleFullScreen={toggleFullScreen}
+          currentTime={currentTime}
+          duration={duration}
+          volume={volume}
+          handleVolumeChange={handleVolumeChange}
+          playbackRate={playbackRate}
+        />
+      )}
     </div>
   );
 };
