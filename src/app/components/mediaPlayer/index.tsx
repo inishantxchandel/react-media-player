@@ -1,7 +1,8 @@
-"use client"
+"use client";
 import React, { useState, useEffect, useRef } from "react";
 import Controls from "../controls";
 import { Expand, Loader } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MediaPlayerProps {
   mediaList: string[];
@@ -20,11 +21,12 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const [duration, setDuration] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-  const [showControls, setShowControls] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isMiniPlayer, setIsMiniPlayer] = useState<boolean>(false);
   const mediaRef = useRef<HTMLMediaElement>(null);
+  const mediaFocusRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const [initialRender, setInitialRender] = useState<boolean>(true)
 
   useEffect(() => {
     if (mediaRef?.current) {
@@ -99,17 +101,9 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     }
   };
 
-  const toggleControls = () => {
-    if (mediaList[currentMediaIndex].endsWith(".mp3")) {
-      setShowControls(true);
-    } else {
-      setShowControls(!showControls);
-    }
-  };
-
   const toggleMiniPlayer = () => {
     setIsMiniPlayer(!isMiniPlayer);
-  }
+  };
 
   const toggleFullScreen = () => {
     if (!isFullScreen) {
@@ -121,7 +115,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     }
     setIsFullScreen(!isFullScreen);
   };
-  
 
   const handleLoading = () => {
     setIsLoading(true);
@@ -154,7 +147,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   };
 
   const handleKeyPress = (e: any) => {
-    setShowControls(true);
     switch (e.key) {
       case " ":
         togglePlay();
@@ -195,27 +187,43 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
         break;
     }
   };
+
   useEffect(() => {
-    window.addEventListener("keydown", handleKeyPress);
-    const hideControlsTimeout = setTimeout(() => {
-      if (!mediaList[currentMediaIndex].endsWith(".mp3")) {
-        setShowControls(false);
-      }
-    }, 3000);
+    document.addEventListener("keydown", handleKeyPress);
     return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-      clearTimeout(hideControlsTimeout);
+      document.removeEventListener("keydown", handleKeyPress);
     };
-  }, [showControls]);
+  }, [
+    togglePlay,
+    handleVolumeChange,
+    volume,
+    skipTime,
+    toggleFullScreen,
+    toggleMiniPlayer,
+    nextMedia,
+    previousMedia,
+  ]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setInitialRender(false);
+    }, 3000);
+
+    return () => {
+      setInitialRender(true);
+    }
+  }
+  , [currentMediaIndex])
 
   return (
     <div
-      className={`player border ${
-        isMiniPlayer ? 'w-[300px] h-[169px] fixed bottom-0 right-0' : 'w-[80%] mx-auto'
-      } border-gray-300 rounded-md overflow-hidden relative ${
-        isFullScreen ? "top-0 left-0 right-0 bottom-0" : ""
-      }`}
-      onMouseEnter={toggleControls}
+    ref={mediaFocusRef}
+    className={cn(
+      "player border border-gray-300 rounded-md overflow-hidden group",
+      isMiniPlayer ? "w-[300px] h-[169px] fixed bottom-0 right-0" : "w-full md:w-[60%] mx-auto relative",
+      isFullScreen ? "top-0 left-0 right-0 bottom-0" : ""
+    )}
+    
     >
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -224,64 +232,62 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
           </div>
         </div>
       )}
-      {mediaList.length > 0 && (
-        <>
-          {mediaList[currentMediaIndex].endsWith(".mp4") ? (
-            <div>
-            <video
-              ref={mediaRef as React.MutableRefObject<HTMLVideoElement>}
-              src={mediaList[currentMediaIndex]}
-              className="w-full"
-              autoPlay
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-            ></video>
-            {isMiniPlayer &&
-
-             <Expand
-              className="absolute top-0 right-0 m-4 cursor-pointer"
+      {mediaList[currentMediaIndex].endsWith(".mp4") ? (
+        <div>
+          <video
+            ref={mediaRef as React.MutableRefObject<HTMLVideoElement>}
+            src={mediaList[currentMediaIndex]}
+            className="w-full"
+            autoPlay
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+          ></video>
+          {isMiniPlayer && (
+            <Expand
+              className="absolute top-0 right-0 m-4 cursor-pointer text-slate-900"
               onClick={toggleMiniPlayer}
-            />}
-            </div>
-          ) : (
-            <audio
-              ref={mediaRef as React.MutableRefObject<HTMLAudioElement>}
-              src={mediaList[currentMediaIndex]}
-              className="w-full"
-              autoPlay
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-            ></audio>
+            />
           )}
-          <div
-            ref={progressRef}
-            className="progress-bar bg-gray-300 h-2 cursor-pointer absolute bottom-0 left-0 right-0"
-            onClick={handleProgressClick}
-          >
-            <div
-              className="progress bg-blue-500 h-full"
-              style={{ width: `${(currentTime / duration) * 100}%` }}
-            ></div>
-          </div>
-        </>
+        </div>
+      ) : (
+        <audio
+          ref={mediaRef as React.MutableRefObject<HTMLAudioElement>}
+          src={mediaList[currentMediaIndex]}
+          className="w-full"
+          autoPlay
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+        ></audio>
       )}
-      {showControls && (
-        <Controls
-          isPlaying={isPlaying}
-          togglePlay={togglePlay}
-          skipTime={skipTime}
-          previousMedia={previousMedia}
-          nextMedia={nextMedia}
-          handleRateChange={handleRateChange}
-          toggleFullScreen={toggleFullScreen}
-          currentTime={currentTime}
-          duration={duration}
-          volume={volume}
-          handleVolumeChange={handleVolumeChange}
-          playbackRate={playbackRate}
-          toggleMiniPlayer={toggleMiniPlayer}
-        />
-      )}
+      <div
+        ref={progressRef}
+        className="progress-bar bg-gray-300 h-2 cursor-pointer absolute bottom-0 left-0 right-0"
+        onClick={handleProgressClick}
+      >
+        <div
+          className="progress bg-blue-500 h-full"
+          style={{ width: `${(currentTime / duration) * 100}%` }}
+        ></div>
+      </div>
+
+      <Controls
+        className={cn(
+          initialRender || mediaList[currentMediaIndex].endsWith(".mp3")  ? "flex" : "sm:group-hover:flex sm:hidden"
+        )}
+        isPlaying={isPlaying}
+        togglePlay={togglePlay}
+        skipTime={skipTime}
+        previousMedia={previousMedia}
+        nextMedia={nextMedia}
+        handleRateChange={handleRateChange}
+        toggleFullScreen={toggleFullScreen}
+        currentTime={currentTime}
+        duration={duration}
+        volume={volume}
+        handleVolumeChange={handleVolumeChange}
+        playbackRate={playbackRate}
+        toggleMiniPlayer={toggleMiniPlayer}
+      />
     </div>
   );
 };
