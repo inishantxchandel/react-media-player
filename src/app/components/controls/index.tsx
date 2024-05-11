@@ -4,10 +4,10 @@ import {
   CirclePlay,
   SkipForward,
   Maximize2,
-  Minimize2,
   Minimize,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { intervals } from "@/lib/constants";
 
 interface ButtonProps {
   label: string;
@@ -49,11 +49,6 @@ const Controls: React.FC<ControlsProps> = ({
   toggleMiniPlayer,
 }) => {
   const buttons: ButtonProps[] = [
-    {
-      label: isPlaying ? "" : "",
-      onClick: togglePlay,
-      icon: isPlaying ? <CirclePause /> : <CirclePlay />,
-    },
     { label: "-10s", onClick: () => skipTime(-10) },
     { label: "+10s", onClick: () => skipTime(10) },
     { label: "", onClick: toggleMiniPlayer, icon: <Minimize /> },
@@ -63,11 +58,12 @@ const Controls: React.FC<ControlsProps> = ({
       onClick: previousMedia,
       icon: <SkipForward className="rotate-180" />,
     },
+    {
+      label: isPlaying ? "" : "",
+      onClick: togglePlay,
+      icon: isPlaying ? <CirclePause /> : <CirclePlay />,
+    },
     { label: "", onClick: nextMedia, icon: <SkipForward /> },
-  ];
-
-  const intervals = [
-    0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4,
   ];
 
   const formatTime = (time: number) => {
