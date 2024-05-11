@@ -9,12 +9,14 @@ import {
 import { cn } from "@/lib/utils";
 import { intervals } from "@/lib/constants";
 
+// Interface for button properties
 interface ButtonProps {
   label: string;
   onClick: () => void;
   icon?: React.ReactNode;
 }
 
+// Interface for control properties
 interface ControlsProps {
   isPlaying: boolean;
   togglePlay: () => void;
@@ -30,6 +32,8 @@ interface ControlsProps {
   handleVolumeChange: (volume: number) => void;
   playbackRate: number;
   className?: string;
+  currentMediaIndex: number;
+  mediaList: string[];
 }
 
 const Controls: React.FC<ControlsProps> = ({
@@ -47,25 +51,48 @@ const Controls: React.FC<ControlsProps> = ({
   handleVolumeChange,
   playbackRate,
   toggleMiniPlayer,
+  currentMediaIndex,
+  mediaList,
 }) => {
+  // Array of buttons with labels, onClick handlers, and icons
   const buttons: ButtonProps[] = [
     { label: "-10s", onClick: () => skipTime(-10) },
     { label: "+10s", onClick: () => skipTime(10) },
-    { label: "", onClick: toggleMiniPlayer, icon: <Minimize /> },
-    { label: "", onClick: toggleFullScreen, icon: <Maximize2 /> },
+    { label: "", onClick: toggleMiniPlayer, icon: <Minimize /> }, // Toggle mini player button
+    { label: "", onClick: toggleFullScreen, icon: <Maximize2 /> }, // Toggle fullscreen button
     {
       label: "",
       onClick: previousMedia,
-      icon: <SkipForward className="rotate-180" />,
+      icon: (
+        <SkipForward
+          className={cn(
+            "rotate-180",
+            currentMediaIndex === 0 ? "opacity-50 cursor-not-allowed" : ""
+          )}
+        />
+      ),
+    }, // Prev media button
+    {
+      label: "",
+      onClick: togglePlay, // Toggle play/pause action
+      icon: isPlaying ? <CirclePause /> : <CirclePlay />, // Play or pause icon based on the playback state
     },
     {
-      label: isPlaying ? "" : "",
-      onClick: togglePlay,
-      icon: isPlaying ? <CirclePause /> : <CirclePlay />,
-    },
-    { label: "", onClick: nextMedia, icon: <SkipForward /> },
+      label: "",
+      onClick: nextMedia,
+      icon: (
+        <SkipForward
+          className={cn(
+            currentMediaIndex === mediaList.length - 1
+              ? "opacity-50 cursor-not-allowed"
+              : ""
+          )}
+        />
+      ),
+    }, // Next media button
   ];
 
+  // Function to format time in MM:SS format
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
@@ -82,16 +109,18 @@ const Controls: React.FC<ControlsProps> = ({
         className
       )}
     >
+      {/* Render buttons */}
       {buttons.map((button, index) => (
         <button
           key={index}
           className="text-blue-500 py-2 px-4 rounded-md flex flex-wrap"
           onClick={button.onClick}
         >
-          {button.icon && button.icon}
-          {button.label}
+          {button.icon && button.icon} {/* Render icon if available */}
+          {button.label} {/* Render label */}
         </button>
       ))}
+      {/* Volume control */}
       <input
         type="range"
         min="0"
@@ -100,17 +129,20 @@ const Controls: React.FC<ControlsProps> = ({
         onChange={(e) => handleVolumeChange(Number(e.target.value))}
         className="mx-2"
       />
+      {/* Playback rate control */}
       <select
         value={playbackRate}
         onChange={(e) => handleRateChange(parseFloat(e.target.value))}
         className="mx-2 bg-white border border-gray-300 rounded-md px-4 py-2"
       >
+        {/* Map playback rate options */}
         {intervals.map((rate) => (
           <option key={rate} value={rate}>
             {rate}x
           </option>
         ))}
       </select>
+      {/* Display current time and duration */}
       <div className="text-blue-500 px-2 py-4">
         {formatTime(currentTime)} / {formatTime(duration)}
       </div>

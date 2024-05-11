@@ -6,17 +6,18 @@ import { cn } from "@/lib/utils";
 import useMediaPlayer from "@/hooks/useMediaPlayer";
 
 interface MediaPlayerProps {
-  mediaList: string[];
-  initialMediaIndex?: number;
+  mediaList: string[]; // List of media URLs
+  initialMediaIndex?: number; // Index of the initial media item (optional, defaults to 0)
 }
 
 const MediaPlayer: React.FC<MediaPlayerProps> = ({
   mediaList,
   initialMediaIndex = 0,
 }) => {
-
+  // State to track initial render
   const [initialRender, setInitialRender] = useState<boolean>(true);
 
+  // Destructuring values from the custom hook
   const {
     currentMediaIndex,
     isPlaying,
@@ -39,10 +40,13 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     toggleFullScreen,
     handleProgressClick,
     isVideo,
-    setIsPlaying
+    setIsPlaying,
   } = useMediaPlayer(initialMediaIndex, mediaList);
 
   return (
+    <div>
+      <h1 className="text-4xl pt-4 pb-2 font-bold text-gray-700 text-center">{`Media Player(${currentMediaIndex+1}/${mediaList.length})`}</h1>
+      <h4 className="text-xl pb-4 font-bold text-gray-700 text-center">Playing: {isVideo(mediaList[currentMediaIndex])?"Video":"Audio"}</h4>
     <div
       className={cn(
         "player border border-gray-300 rounded-md overflow-hidden group transition-all duration-300",
@@ -53,6 +57,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
       )}
       onMouseEnter={() => setInitialRender(false)}
     >
+      {/* Display loader if media is loading */}
       {isLoading && (
         <div className="absolute inset-0 flex z-50 items-center justify-center bg-black bg-opacity-50">
           <div className="animate-spin">
@@ -60,6 +65,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
           </div>
         </div>
       )}
+      {/* Render video or audio element based on media type */}
       {isVideo(mediaList[currentMediaIndex]) ? (
         <div className="relative">
           <video
@@ -71,6 +77,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
             onPause={() => setIsPlaying(false)}
           ></video>
 
+          {/* Render expand icon for mini player */}
           {isMiniPlayer && (
             <>
               <div className="bg-gradient-to-bl from-black/70 via-transparent to-transparent absolute inset-0"></div>
@@ -92,6 +99,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
           onPause={() => setIsPlaying(false)}
         ></audio>
       )}
+      {/* Render progress bar */}
       <div
         ref={progressRef}
         className="progress-bar bg-gray-300 h-2 cursor-pointer absolute bottom-0 left-0 right-0"
@@ -103,6 +111,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
         ></div>
       </div>
 
+      {/* Render controls */}
       <Controls
         className={cn(
           initialRender || !isVideo(mediaList[currentMediaIndex])
@@ -122,7 +131,10 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
         handleVolumeChange={handleVolumeChange}
         playbackRate={playbackRate}
         toggleMiniPlayer={toggleMiniPlayer}
+        currentMediaIndex={currentMediaIndex}
+        mediaList={mediaList}
       />
+    </div>
     </div>
   );
 };

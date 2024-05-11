@@ -2,54 +2,64 @@ import { useState, useEffect, useRef } from "react";
 
 const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
   const [currentMediaIndex, setCurrentMediaIndex] =
-    useState<number>(initialMediaIndex);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [volume, setVolume] = useState<number>(100);
-  const [playbackRate, setPlaybackRate] = useState<number>(1.0);
-  const [duration, setDuration] = useState<number>(0);
-  const [currentTime, setCurrentTime] = useState<number>(0);
-  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isMiniPlayer, setIsMiniPlayer] = useState<boolean>(false);
+    useState<number>(initialMediaIndex); // Index of the currently playing media
+  const [isPlaying, setIsPlaying] = useState<boolean>(false); // Playback state
+  const [volume, setVolume] = useState<number>(100); // Volume level
+  const [playbackRate, setPlaybackRate] = useState<number>(1.0); // Playback speed
+  const [duration, setDuration] = useState<number>(0); // Total duration of the media
+  const [currentTime, setCurrentTime] = useState<number>(0); // Current playback time
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(false); // Fullscreen mode
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Loading state
+  const [isMiniPlayer, setIsMiniPlayer] = useState<boolean>(false); // Mini player mode
+
+  // Refs for media and progress bar
   const mediaRef = useRef<HTMLMediaElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
 
+  // Function to update current time during playback
   const updateTime = () => {
     if (mediaRef.current) {
       setCurrentTime(mediaRef.current.currentTime);
     }
   };
 
+  // Handler for volume change
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
   };
 
+  // Handler for playback rate change
   const handleRateChange = (rate: number) => {
     setPlaybackRate(rate);
   };
 
+  // Function to skip time during playback
   const skipTime = (time: number) => {
     if (mediaRef.current) {
       mediaRef.current.currentTime += time;
     }
   };
 
+  // Function to play the next media in the list
   const nextMedia = () => {
     if (currentMediaIndex < mediaList.length - 1) {
       setCurrentMediaIndex(currentMediaIndex + 1);
     }
   };
 
+  // Function to play the previous media in the list
   const previousMedia = () => {
     if (currentMediaIndex > 0) {
       setCurrentMediaIndex(currentMediaIndex - 1);
     }
   };
 
+  // Function to toggle mini player mode
   const toggleMiniPlayer = () => {
     setIsMiniPlayer(!isMiniPlayer);
   };
 
+  // Function to toggle fullscreen mode
   const toggleFullScreen = () => {
     if (!isFullScreen) {
       if (mediaRef.current) {
@@ -61,14 +71,17 @@ const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
     setIsFullScreen(!isFullScreen);
   };
 
+  // Handler for media loading
   const handleLoading = () => {
     setIsLoading(true);
   };
 
+  // Handler for media loaded
   const handleLoaded = () => {
     setIsLoading(false);
   };
 
+  // Function to toggle play/pause
   const togglePlay = () => {
     if (isPlaying) {
       mediaRef.current?.pause();
@@ -78,6 +91,7 @@ const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
     setIsPlaying(!isPlaying);
   };
 
+  // Handler for progress bar click
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const progressBar = progressRef.current;
     if (progressBar) {
@@ -91,7 +105,9 @@ const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
     }
   };
 
+  // Handler for keyboard shortcuts
   const handleKeyPress = (e: any) => {
+    console.log(e.key);
     switch (e.key) {
       case " ":
         togglePlay();
@@ -128,18 +144,25 @@ const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
       case "P":
         previousMedia();
         break;
+      case "Escape":
+        if (isFullScreen) {
+          toggleFullScreen();
+        }
+        break;
       default:
         break;
     }
   };
 
+  // Function to check if media is a video file
   const isVideo = (url: string): boolean => {
-    const videoExtensions = [".mp4", ".avi", ".mov", ".wmv", ".mkv"]; // Add more extensions as needed
+    const videoExtensions = [".mp4", ".avi", ".mov", ".wmv", ".mkv"]; // Supported video extensions
     const fileExtension = url.substring(url.lastIndexOf("."));
 
     return videoExtensions.includes(fileExtension);
   };
 
+  // Effect to set up media listeners and cleanup
   useEffect(() => {
     if (mediaRef?.current) {
       mediaRef.current.volume = volume / 100;
@@ -160,6 +183,7 @@ const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
     };
   }, [volume, playbackRate, currentMediaIndex]);
 
+  // Effect to handle autoplay and media end
   useEffect(() => {
     if (mediaRef.current) {
       const media = mediaRef.current;
@@ -181,6 +205,7 @@ const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
     }
   }, [currentMediaIndex]);
 
+  // Effect to add keyboard event listener
   useEffect(() => {
     document.addEventListener("keydown", handleKeyPress);
     return () => {
@@ -197,6 +222,7 @@ const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
     previousMedia,
   ]);
 
+  // Return all the necessary functions and states
   return {
     currentMediaIndex,
     isPlaying,

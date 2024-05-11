@@ -2,6 +2,10 @@
 
 This project is a custom audio/video player built using Next.js, with a focus on modularity, custom hooks, and TypeScript.
 
+## Tech Stack
+
+- **NextJs, TailwindCSS**
+
 ## Functionalities
 
 ### Player Controls
@@ -43,8 +47,9 @@ This project is a custom audio/video player built using Next.js, with a focus on
 
 ## Submission Details
 
-- **GitHub Repository:** [https://github.com/inishantxchandel/react-media-player](#)
-- **Live Demo:** [https://react-media-player-sage.vercel.app/](#)
+- **GitHub Repository:** [Repo](#)
+
+- **Live Demo:** [Media Player](https://react-media-player-sage.vercel.app/)
 
 ## Notes
 
