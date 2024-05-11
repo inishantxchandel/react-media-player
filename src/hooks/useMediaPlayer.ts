@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 
 const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
-  const [currentMediaIndex, setCurrentMediaIndex] = useState<number>(initialMediaIndex);
+  const [currentMediaIndex, setCurrentMediaIndex] =
+    useState<number>(initialMediaIndex);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [volume, setVolume] = useState<number>(100);
   const [playbackRate, setPlaybackRate] = useState<number>(1.0);
@@ -12,8 +13,6 @@ const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
   const [isMiniPlayer, setIsMiniPlayer] = useState<boolean>(false);
   const mediaRef = useRef<HTMLMediaElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
-
-
 
   const updateTime = () => {
     if (mediaRef.current) {
@@ -137,7 +136,7 @@ const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
   const isVideo = (url: string): boolean => {
     const videoExtensions = [".mp4", ".avi", ".mov", ".wmv", ".mkv"]; // Add more extensions as needed
     const fileExtension = url.substring(url.lastIndexOf("."));
-  
+
     return videoExtensions.includes(fileExtension);
   };
 
@@ -220,7 +219,7 @@ const useMediaPlayer = (initialMediaIndex: number, mediaList: string[]) => {
     toggleFullScreen,
     handleProgressClick,
     isVideo,
-    setIsPlaying
+    setIsPlaying,
   };
 };
 
