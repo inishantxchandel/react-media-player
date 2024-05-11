@@ -28,46 +28,6 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const progressRef = useRef<HTMLDivElement>(null);
   const [initialRender, setInitialRender] = useState<boolean>(true)
 
-  useEffect(() => {
-    if (mediaRef?.current) {
-      mediaRef.current.volume = volume / 100;
-      mediaRef.current.playbackRate = playbackRate;
-      mediaRef.current.addEventListener("timeupdate", updateTime);
-      mediaRef.current.addEventListener("loadedmetadata", () => {
-        setDuration(mediaRef.current?.duration || 0);
-      });
-      mediaRef.current.addEventListener("waiting", handleLoading);
-      mediaRef.current.addEventListener("playing", handleLoaded);
-    }
-    return () => {
-      if (mediaRef.current) {
-        mediaRef.current.removeEventListener("timeupdate", updateTime);
-        mediaRef.current.removeEventListener("waiting", handleLoading);
-        mediaRef.current.removeEventListener("playing", handleLoaded);
-      }
-    };
-  }, [volume, playbackRate, currentMediaIndex]);
-
-  useEffect(() => {
-    if (mediaRef.current) {
-      const media = mediaRef.current;
-      if (media.autoplay && !media.paused) {
-        setIsPlaying(true);
-      }
-      if (!isPlaying && media.autoplay) {
-        media.play();
-      }
-      const handleEnded = () => {
-        if (!media.loop && currentMediaIndex < mediaList.length - 1) {
-          nextMedia();
-        }
-      };
-      media.addEventListener("ended", handleEnded);
-      return () => {
-        media.removeEventListener("ended", handleEnded);
-      };
-    }
-  }, [currentMediaIndex]);
 
   const updateTime = () => {
     if (mediaRef.current) {
@@ -188,6 +148,14 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     }
   };
 
+  const isVideo = (url: string): boolean => {
+    const videoExtensions = [".mp4", ".avi", ".mov", ".wmv", ".mkv"]; // Add more extensions as needed
+    const fileExtension = url.substring(url.lastIndexOf("."));
+  
+    return videoExtensions.includes(fileExtension);
+  };
+  
+
   useEffect(() => {
     document.addEventListener("keydown", handleKeyPress);
     return () => {
@@ -205,6 +173,25 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   ]);
 
   useEffect(() => {
+    if (mediaRef.current) {
+      const media = mediaRef.current;
+      if (media.autoplay && !media.paused) {
+        setIsPlaying(true);
+      }
+      if (!isPlaying && media.autoplay) {
+        media.play();
+      }
+      const handleEnded = () => {
+        if (!media.loop && currentMediaIndex < mediaList.length - 1) {
+          nextMedia();
+        }
+      };
+      media.addEventListener("ended", handleEnded);
+      return () => {
+        media.removeEventListener("ended", handleEnded);
+      };
+    }
+
     setTimeout(() => {
       setInitialRender(false);
     }, 3000);
@@ -212,8 +199,29 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
     return () => {
       setInitialRender(true);
     }
-  }
-  , [currentMediaIndex])
+
+
+  }, [currentMediaIndex]);
+
+  useEffect(() => {
+    if (mediaRef?.current) {
+      mediaRef.current.volume = volume / 100;
+      mediaRef.current.playbackRate = playbackRate;
+      mediaRef.current.addEventListener("timeupdate", updateTime);
+      mediaRef.current.addEventListener("loadedmetadata", () => {
+        setDuration(mediaRef.current?.duration || 0);
+      });
+      mediaRef.current.addEventListener("waiting", handleLoading);
+      mediaRef.current.addEventListener("playing", handleLoaded);
+    }
+    return () => {
+      if (mediaRef.current) {
+        mediaRef.current.removeEventListener("timeupdate", updateTime);
+        mediaRef.current.removeEventListener("waiting", handleLoading);
+        mediaRef.current.removeEventListener("playing", handleLoaded);
+      }
+    };
+  }, [volume, playbackRate, currentMediaIndex]);
 
   return (
     <div
@@ -232,8 +240,8 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
           </div>
         </div>
       )}
-      {mediaList[currentMediaIndex].endsWith(".mp4") ? (
-        <div>
+      { isVideo(mediaList[currentMediaIndex]) ? (
+        <div className="relative">
           <video
             ref={mediaRef as React.MutableRefObject<HTMLVideoElement>}
             src={mediaList[currentMediaIndex]}
@@ -242,11 +250,16 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
           ></video>
+
           {isMiniPlayer && (
+            <>
+          <div className="bg-gradient-to-bl from-black/70 via-transparent to-transparent absolute inset-0"></div>
+
             <Expand
-              className="absolute top-0 right-0 m-4 cursor-pointer text-slate-900"
+              className="absolute top-0 right-0 m-4 cursor-pointer text-white border border-blue-500 rounded-md p-1"
               onClick={toggleMiniPlayer}
             />
+            </>
           )}
         </div>
       ) : (
@@ -272,7 +285,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
 
       <Controls
         className={cn(
-          initialRender || mediaList[currentMediaIndex].endsWith(".mp3")  ? "flex" : "sm:group-hover:flex sm:hidden"
+          initialRender || !isVideo(mediaList[currentMediaIndex])  ? "flex" : "sm:group-hover:flex sm:hidden"
         )}
         isPlaying={isPlaying}
         togglePlay={togglePlay}

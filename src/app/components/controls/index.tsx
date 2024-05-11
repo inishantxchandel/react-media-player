@@ -115,7 +115,7 @@ const Controls: React.FC<ControlsProps> = ({
           </option>
         ))}
       </select>
-      <div className="text-white px-2 py-4">
+      <div className="text-blue-500 px-2 py-4">
         {formatTime(currentTime)} / {formatTime(duration)}
       </div>
     </div>
